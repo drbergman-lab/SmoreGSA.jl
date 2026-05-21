@@ -1,0 +1,13 @@
+name = "SMoReGloS"
+uuid = "9c3131c9-a14b-4789-b6cd-5dc07c3ea91f"
+authors = ["Daniel Bergman <danielrbergman@gmail.com> and contributors"]
+version = "0.1.0"
+
+[compat]
+julia = "1.10.10"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
