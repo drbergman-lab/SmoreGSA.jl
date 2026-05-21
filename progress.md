@@ -1,0 +1,70 @@
+# progress.md — SmoreGSA.jl Session Journal
+
+> **Purpose:** Session-level decisions, rejected approaches, and open questions.
+> Unlike [PRD.md](PRD.md) (specification) and [README.md](README.md) (completion status), this file captures the *reasoning* behind decisions — things that would otherwise exist only in ended chat history.
+
+---
+
+## Session: Initialization — Architecture decisions relevant to SmoreGSA (2026-05-19)
+
+### Key Decisions
+
+**`GlobalSensitivity.jl` for sensitivity analysis**
+Rather than native EFAST/Morris implementations, SmoreGSA wraps `GlobalSensitivity.jl`. The SM is callable (unlike the CM which is external), so the GSA library's interface fits naturally. This avoids reimplementing FFT-based EFAST index computation. SmoreGSA provides the wrapper that calls `_evaluate(sm, ...)` at the required sample points.
+
+**`sampleSMPredictions` is not a sensitivity method**
+LHS-based Monte Carlo sampling within the profile-likelihood CI region is uncertainty propagation (in SmoreBase), not global sensitivity analysis. It does not live in SmoreGSA.
+
+---
+
+## Session: SmoreGSA — `runSensitivity` (2026-05-20)
+
+### Goal
+Implement `runSensitivity`: GSA of CM output with respect to CM parameters, using the SM as a fast proxy for the CM.
+
+### Key Design Decisions
+
+**Sensitivity is of CM output to CM parameters (not SM parameters)**
+Initial plan considered varying SM parameters directly. Clarified with user: the SM acts as a fast CM proxy. For any CM parameter vector requested by the GSA algorithm, the SM is evaluated by (1) interpolating SM parameter CI bounds from the nearest known cohort, (2) LHS-sampling within the resulting box, (3) averaging SM outputs over LHS draws. This mirrors MATLAB `sampleFromSMProfiles.m`.
+
+**ICDF transform inside the callable; unit bounds to GlobalSensitivity.jl**
+`ParameterPrior` stores full `Distributions.jl` distributions for CM parameters. The callable `f(u)` accepts `u ∈ [0,1]^n_cm` and applies `θ_CM[i] = quantile(cm_prior.distributions[i], u[i])` (inverse CDF). `GlobalSensitivity.gsa` is given `[[0.0, 1.0] for _ in 1:n_cm]` as bounds. This correctly handles non-uniform CM priors for both EFAST and Morris.
+
+**Nearest-neighbor interpolation of CI bounds (v1)**
+For arbitrary CM parameter vectors, the CI bounds are taken from the closest known cohort (Euclidean distance in CM parameter space). No interpolation library needed; the inner loop is O(n_cohorts) and n_cohorts is typically small. Richer interpolation (linear, RBF) deferred.
+
+**`_runSensitivity` takes `n_cm::Int`, not bounds**
+Since bounds are always `[0,1]^n_cm` (ICDF is inside the callable), the internal dispatch functions construct unit bounds from `n_cm` directly.
+
+**Morris `total_num_trajectory` default**
+When `nothing`, we pass `10 × num_trajectory` to `GlobalSensitivity.Morris`. This matches GlobalSensitivity.jl's effective default and makes the behavior explicit.
+
+**`ST = nothing` for Morris**
+Morris does not compute total-order indices; `SensitivityResult.ST` is `Union{Nothing, Matrix{T}}`.
+
+### Status
+All 6 source files implemented, module and Project.toml updated. All 5 test sets pass (20 assertions).
+
+---
+
+## Session: Plotting (RecipesBase + Makie extensions) (2026-05-21)
+
+### Goal
+Add `plot(sens_result)` via RecipesBase extension and `Makie.plot(sens_result)` via Makie extension.
+
+### Key Design Decisions
+
+**Sensitivity bar chart: CM parameters on x-axis**
+With `S1 :: [n_outputs × n_cm_params]` (native GlobalSensitivity.jl layout), the most common presentation puts CM parameter names on the x-axis and groups bars by output. ST bars are shown alongside S1 bars (same x positions) when `show_ST=true` (default) and `ST` is not `nothing`.
+
+**RecipesBase as a weak dep (extension)**
+`SmoreGSAPlotsExt` activates when `RecipesBase` is loaded. Keeps SmoreGSA lean for Makie-only users.
+
+**Makie `barplot!` with dodge for sensitivity chart**
+Multiple `barplot!` calls at the same x positions, each specifying a `dodge` group index. S1 and ST bars for the same output are interleaved: S1 at odd dodge positions, ST at even. ST bars use `alpha=0.45` for reduced opacity.
+
+**Single Makie extension (`SmoreGSAMakieExt`)**
+One extension using `Makie` as the weak dep — all Makie backends (CairoMakie, GLMakie, WGLMakie) load `Makie`, so the extension fires for any backend.
+
+### Status
+All files written. Existing tests pass. No Makie tests added (large dependency, not suitable for CI).

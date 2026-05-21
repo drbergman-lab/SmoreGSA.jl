@@ -5,5 +5,51 @@
 [![Build Status](https://github.com/drbergman-lab/SmoreGSA.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/drbergman-lab/SmoreGSA.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![Coverage](https://codecov.io/gh/drbergman-lab/SmoreGSA.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/drbergman-lab/SmoreGSA.jl)
 
-SmoreGSA.jl is a Julia package that supports global sensitivity analysis (GSA) within the SMoRe framework. 
-It implements the SMoRe GloS framework described in [**An efficient and flexible framework for inferring global sensitivity of agent-based model parameters**](https://doi.org/10.1371/journal.pcbi.1013427). It provides tools and methods for performing sensitivity analysis on surrogate models, allowing users to identify which input parameters have the most significant impact on the output of a model. This package includes various techniques for GSA, such as variance-based methods, Sobol indices, and other sensitivity measures. SmoreGSA.jl is designed to work seamlessly with the core functionalities provided by SmoreBase.jl, enabling users to easily integrate sensitivity analysis into their surrogate modeling workflows.
+Global sensitivity analysis (GSA) for the [Smore](https://github.com/drbergman-lab/Smore.jl) surrogate modeling ecosystem. SmoreGSA uses a fitted surrogate model (SM) as a fast proxy for a slow, expensive complex model (CM) to perform GSA of CM outputs with respect to CM parameters.
+
+Implements the SMoRe GloS framework described in [**An efficient and flexible framework for inferring global sensitivity of agent-based model parameters**](https://doi.org/10.1371/journal.pcbi.1013427).
+
+## Quick Start
+
+```julia
+using SmoreBase, SmoreGSA
+using Distributions
+
+# After fitting SM and running UQ (see SmoreBase):
+#   fit = fitSurrogate(sm, data, P0, sm_prior)
+#   uq_results = [_uq(sm, data, fit, ProfileLikelihood(); cohort_index=i) for i in 1:n_cohorts]
+
+cm_prior = ParameterPrior(
+    lower = [0.0, 0.0],
+    upper = [2.0, 5.0],
+    names = ["r", "K"],
+)
+
+result = runSensitivity(sm, uq_results, cm_params, cm_prior, EFAST(n_samples=100); times = t)
+
+# Plot sensitivity indices
+using RecipesBase  # or: using CairoMakie
+plot(result)       # grouped bar chart: S1 and ST per CM parameter
+```
+
+---
+
+## Implementation Status
+
+> For Claude Code sessions: this section is the authoritative record of what has been built. Update it as features are completed. See [PRD.md](PRD.md) for behavioral specifications and [progress.md](progress.md) for decision rationale.
+
+### Completed
+
+- [x] `runSensitivity` — EFAST and Morris sensitivity of CM outputs to CM parameters, using SM as fast CM proxy (via `GlobalSensitivity.jl`)
+- [x] `EFAST`, `Morris` — GSA method types
+- [x] `SensitivityResult` — result type with `S1`, `ST` (Morris: `ST === nothing`), `cm_parameter_names`, `output_labels`
+- [x] Nearest-neighbor interpolation of CI bounds from known cohorts
+- [x] ICDF transform inside the callable; unit bounds passed to `GlobalSensitivity.gsa`
+- [x] Plots extension (`SmoreGSAPlotsExt`) — `plot(sens_result)` grouped bar chart; activated by loading `RecipesBase`
+- [x] Makie extension (`SmoreGSAMakieExt`) — `Makie.plot(sens_result)` grouped bar chart; activated by loading any Makie backend
+
+### Remaining
+
+- [ ] Lift SM sensitivity to CM parameter space
+- [ ] Richer CM parameter interpolation (linear, RBF) instead of nearest-neighbor
+- [ ] Multi-condition averaging (`runSensitivity` v1 uses first condition only)
