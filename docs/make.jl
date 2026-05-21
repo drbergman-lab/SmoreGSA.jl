@@ -1,14 +1,14 @@
-using SMoReGloS
+using SmoreGSA
 using Documenter
 
-DocMeta.setdocmeta!(SMoReGloS, :DocTestSetup, :(using SMoReGloS); recursive=true)
+DocMeta.setdocmeta!(SmoreGSA, :DocTestSetup, :(using SmoreGSA); recursive=true)
 
 makedocs(;
-    modules=[SMoReGloS],
+    modules=[SmoreGSA],
     authors="Daniel Bergman <danielrbergman@gmail.com> and contributors",
-    sitename="SMoReGloS.jl",
+    sitename="SmoreGSA.jl",
     format=Documenter.HTML(;
-        canonical="https://drbergman-lab.github.io/SMoReGloS.jl",
+        canonical="https://drbergman-lab.github.io/SmoreGSA.jl",
         edit_link="main",
         assets=String[],
     ),
@@ -18,6 +18,6 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/drbergman-lab/SMoReGloS.jl",
+    repo="github.com/drbergman-lab/SmoreGSA.jl",
     devbranch="main",
 )

@@ -1,14 +1,14 @@
 ```@meta
-CurrentModule = SMoReGloS
+CurrentModule = SmoreGSA
 ```
 
-# SMoReGloS
+# SmoreGSA
 
-Documentation for [SMoReGloS](https://github.com/drbergman-lab/SMoReGloS.jl).
+Documentation for [SmoreGSA](https://github.com/drbergman-lab/SmoreGSA.jl).
 
 ```@index
 ```
 
 ```@autodocs
-Modules = [SMoReGloS]
+Modules = [SmoreGSA]
 ```
