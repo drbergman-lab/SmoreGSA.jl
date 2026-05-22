@@ -1,6 +1,6 @@
 name = "SmoreGSA"
 uuid = "2c631fec-d58f-4fb9-82f2-11ad836cc5aa"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Daniel Bergman <danielrbergman@gmail.com> and contributors"]
 
 [deps]
