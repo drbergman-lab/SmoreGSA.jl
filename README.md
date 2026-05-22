@@ -16,8 +16,10 @@ using SmoreBase, SmoreGSA
 using Distributions
 
 # After fitting SM and running UQ (see SmoreBase):
-#   fit = fitSurrogate(sm, data, P0, sm_prior)
-#   uq_results = [_uq(sm, data, fit, ProfileLikelihood(); cohort_index=i) for i in 1:n_cohorts]
+#   problem    = SMFitProblem(sm, data, sm_prior)
+#   fit        = fitSurrogate(problem, P0)
+#   uq_results = [SmoreBase._uq(problem, fit, ProfileLikelihood(); param_set_index=i)
+#                 for i in 1:n_cohorts]
 
 cm_prior = ParameterPrior(
     lower = [0.0, 0.0],
@@ -25,7 +27,8 @@ cm_prior = ParameterPrior(
     names = ["r", "K"],
 )
 
-result = runSensitivity(sm, uq_results, cm_params, cm_prior, EFAST(n_samples=100); times = t)
+# Pass the SMFitProblem directly; times and conditions are derived from problem.data
+result = runSensitivity(problem, uq_results, cm_params, cm_prior, EFAST(n_samples=100))
 
 # Plot sensitivity indices
 using RecipesBase  # or: using CairoMakie
@@ -40,7 +43,7 @@ plot(result)       # grouped bar chart: S1 and ST per CM parameter
 
 ### Completed
 
-- [x] `runSensitivity` — EFAST and Morris sensitivity of CM outputs to CM parameters, using SM as fast CM proxy (via `GlobalSensitivity.jl`)
+- [x] `runSensitivity` — EFAST and Morris sensitivity of CM outputs to CM parameters, using SM as fast CM proxy (via `GlobalSensitivity.jl`); accepts `SMFitProblem` directly (derives `sm`, `times`, `conditions` from it)
 - [x] `EFAST`, `Morris` — GSA method types
 - [x] `SensitivityResult` — result type with `S1`, `ST` (Morris: `ST === nothing`), `cm_parameter_names`, `output_labels`
 - [x] Nearest-neighbor interpolation of CI bounds from known cohorts

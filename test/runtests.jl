@@ -134,6 +134,35 @@ end
     @test all(isfinite, sensitivity_S1(result))
 end
 
+# ── SMFitProblem overload ──────────────────────────────────────────────────────
+
+@testset "SMFitProblem overload — happy path" begin
+    sm_prior = ParameterPrior([0.0, 0.0], [5.0, 5.0]; names=["a", "b"])
+    data     = CMData(mean = rand(10), sd = 0.1 .* ones(10), times = _t)
+    problem  = SMFitProblem(_sm, data, sm_prior)
+
+    rng    = Random.MersenneTwister(42)
+    result = runSensitivity(
+        problem, _uq_list, _cm_sample, _cm_prior, EFAST(n_samples=500);
+        rng = rng,
+    )
+
+    @test result isa SensitivityResult
+    @test result.cm_parameter_names == ["cm_param_1"]
+    @test size(sensitivity_S1(result)) == (1, 1)
+    @test size(sensitivity_ST(result)) == (1, 1)
+end
+
+@testset "SMFitProblem overload — endpoint data error" begin
+    sm_prior = ParameterPrior([0.0, 0.0], [5.0, 5.0]; names=["a", "b"])
+    data     = CMData(mean = [1.0], sd = [0.1], variables=1)  # no time axis
+    problem  = SMFitProblem(_sm, data, sm_prior)
+
+    @test_throws ArgumentError runSensitivity(
+        problem, _uq_list, _cm_sample, _cm_prior, Morris(num_trajectory=3),
+    )
+end
+
 # ── Plotting recipes ───────────────────────────────────────────────────────────
 
 @testset "Plots — SensitivityResult (EFAST)" begin

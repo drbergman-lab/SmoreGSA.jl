@@ -68,3 +68,30 @@ One extension using `Makie` as the weak dep — all Makie backends (CairoMakie, 
 
 ### Status
 All files written. Existing tests pass. No Makie tests added (large dependency, not suitable for CI).
+
+---
+
+## Session: `runSensitivity(problem::SMFitProblem, ...)` overload (2026-05-22)
+
+### Goal
+Add a convenience overload so callers can pass an `SMFitProblem` directly to `runSensitivity`, deriving `sm`, `times`, and `conditions` from it — consistent with how `fitSurrogate`, `_uq`, and `sampleSMPredictions` already accept `SMFitProblem`.
+
+### Motivation
+SmoreBase was refactored to introduce `SMFitProblem` as a bundle of `(sm, data, prior, loss)`. The standard Smore workflow now passes a single problem object through fitting and UQ; `runSensitivity` was the only remaining call site that still required threading `sm`, `times`, and `conditions` separately.
+
+### Key Design Decisions
+
+**Overload, not redefine**
+The `sm`-first signature is kept as the implementation. The `problem`-first overload is a thin wrapper that delegates to it. This preserves the escape hatch for callers who have a surrogate model and UQ results but not the original `SMFitProblem` (e.g., loaded from disk).
+
+**`problem.prior` and `problem.loss` are unused**
+`problem.prior` is the SM parameter prior; SM bounds already live inside each `uqResult.fit_result.prior`. `cm_prior` (CM parameter prior) remains a separate caller-supplied positional argument. `problem.loss` is irrelevant post-fitting.
+
+**`times` defaults to `_times(problem.data)`, fails loudly for endpoint data**
+`SmoreBase._times(data)` returns `nothing` for endpoint-only `CMData`. Rather than silently forwarding `nothing` (which would error obscurely inside the inner method), the overload checks immediately and throws a descriptive `ArgumentError`. Callers with endpoint data must supply `times` explicitly.
+
+**Two new methods, not one**
+Added a `problem`-first matrix shorthand (mirroring the existing `sm`-first matrix shorthand) and the core `problem + AbstractCMSample` overload. The matrix shorthand delegates to the CMSample overload, which delegates to the `sm`-first core.
+
+### Status
+Implementation in `src/sensitivity/sensitivity.jl`. Two new test sets added to `test/runtests.jl` (happy path + endpoint error). PRD and README updated.

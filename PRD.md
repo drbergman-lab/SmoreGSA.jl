@@ -32,6 +32,10 @@
   - `outputFn::Function` — maps SM prediction `[n_times × n_outputs]` → `Vector{Float64}`; default: last time point of each output variable
   - `n_sm_samples::Int` — LHS draws per CM parameter point to average over SM parameter uncertainty (default: 16)
   - `rng::AbstractRNG` — RNG for LHS sampling (default: `Random.default_rng()`)
+- `runSensitivity(problem, uqResults, cm_params, cm_prior, method; times, conditions, kwargs...) -> SensitivityResult`
+  - Convenience overload accepting an `SMFitProblem` in place of `sm`. Derives `sm` from `problem.sm`; `times` defaults to `_times(problem.data)` and `conditions` defaults to `_conditions(problem.data)`.
+  - `times` must be supplied explicitly when `problem.data` has no time axis (`_times` returns `nothing`); throws `ArgumentError` otherwise.
+  - `problem.prior` (SM parameter prior) and `problem.loss` are not used — SM bounds come from `uqResults`; `cm_prior` remains a separate caller-supplied argument.
 - **Algorithm:** For each CM parameter vector `θ` that the GSA algorithm requires:
   1. Apply inverse-CDF to unit-cube input `u`: `θ_CM[i] = quantile(cm_prior.distributions[i], u[i])`
   2. Find nearest known cohort in `cm_params` (Euclidean distance)
@@ -55,6 +59,8 @@
 **Acceptance criteria:**
 - `runSensitivity(sm, uqResults, cm_params, cm_prior, EFAST(); times=t)` returns `SensitivityResult` with `size(S1) == (n_cm_params, n_outputs)` and `ST !== nothing`.
 - `runSensitivity(sm, uqResults, cm_params, cm_prior, Morris(); times=t)` returns `SensitivityResult` with `ST === nothing`.
+- `runSensitivity(problem, uqResults, cm_params, cm_prior, EFAST())` (no explicit `times`) returns the same result as the `sm`-first form when `problem.data` carries the same time grid.
+- Calling the `problem`-first form when `problem.data` has no time axis throws `ArgumentError`.
 - When a profile CI bound is `nothing`, the implementation falls back to the fit bounds without error.
 - Custom `outputFn` returning a length-2 vector produces `size(S1) == (n_cm_params, 2)`.
 
