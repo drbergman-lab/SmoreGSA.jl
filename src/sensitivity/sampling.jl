@@ -59,7 +59,7 @@ function _buildCMCallable(
     # Validate that the CM prior support lies within the CM parameter grid, then build
     # the bounds interpolant once; it is reused for every GSA sample point.
     _validatePriorVsGrid(cm_sample, cm_prior)
-    get_bounds = _buildBoundsInterpolant(cm_sample, lb_table, ub_table, interp)
+    get_bounds = SmoreBase._buildBoundsInterpolant(cm_sample, lb_table, ub_table, interp)
 
     function f(u::AbstractVector)
         # 1. ICDF: unit-cube → natural CM parameter scale

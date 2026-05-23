@@ -50,15 +50,7 @@ function runSensitivity(
     args...;
     kwargs...,
 )
-    cm_sample = try
-        GridCMSample(cm_params)
-    catch
-        @info "CM parameter matrix could not be interpreted as a regular grid; " *
-              "falling back to ScatteredCMSample. If you expected a grid layout, " *
-              "check for floating-point inconsistencies in your CM parameter values."
-        ScatteredCMSample(cm_params)
-    end
-    return runSensitivity(sm, uqResults, cm_sample, args...; kwargs...)
+    return runSensitivity(sm, uqResults, CMSample(cm_params), args...; kwargs...)
 end
 
 function runSensitivity(
@@ -68,15 +60,7 @@ function runSensitivity(
     args...;
     kwargs...,
 )
-    cm_sample = try
-        GridCMSample(cm_params)
-    catch
-        @info "CM parameter matrix could not be interpreted as a regular grid; " *
-              "falling back to ScatteredCMSample. If you expected a grid layout, " *
-              "check for floating-point inconsistencies in your CM parameter values."
-        ScatteredCMSample(cm_params)
-    end
-    return runSensitivity(problem, uqResults, cm_sample, args...; kwargs...)
+    return runSensitivity(problem, uqResults, CMSample(cm_params), args...; kwargs...)
 end
 
 """
