@@ -69,12 +69,13 @@ function _buildCMCallable(
         lb, ub = get_bounds(θ_CM)
 
         # 3. LHS sample within the SM parameter CI box — result is [n_sm_params × n_sm_samples].
-        # This uses a uniform distribution on [lb, ub] for each SM parameter (product measure).
+        # This uses a uniform distribution on [lb, ub] for each SM parameter (product measure),
+        # via SmoreBase's public box sampler (a flat profile through the shared sampler internally).
         # A richer approximation would interpolate the full profile LL curve at each CM point
         # and sample from the resulting weighted distribution (as sampleSMPredictions does for
         # a single cohort). That requires interpolating entire curves across the CM grid rather
         # than just the two CI scalars, and is an open research direction.
-        sm_samples = SmoreBase._sampleSMParams(lb, ub, n_sm_samples, rng)
+        sm_samples = sampleSMParametersInBounds(lb, ub; nSamples = n_sm_samples, rng = rng)
 
         # 4. Evaluate SM and accumulate outputFn across samples, then average
         out_sum = outputFn(SmoreBase._evaluate(sm, times, sm_samples[:, 1], cond_label))

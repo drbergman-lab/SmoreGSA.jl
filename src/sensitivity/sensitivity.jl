@@ -67,7 +67,7 @@ end
     runSensitivity(problem, uqResults, cm_sample, cm_prior, method; kwargs...) -> SensitivityResult
 
 Convenience overload that extracts `sm`, `times`, and `conditions` from `problem`, so the
-same object used for `fitSurrogate` and `_uq` can be passed directly to `runSensitivity`.
+same object used for `fitSurrogate` and `quantifyUncertainty` can be passed directly to `runSensitivity`.
 
 `times` defaults to `_times(problem.data)`; pass it explicitly to use a different time grid
 or when the data has no time axis (`_times` returns `nothing` for endpoint-only data, which
