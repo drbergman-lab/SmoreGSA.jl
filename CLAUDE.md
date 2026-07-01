@@ -37,8 +37,7 @@ src/
     ├── efast.jl            # _runSensitivity dispatch for EFAST
     └── morris.jl           # _runSensitivity dispatch for Morris
 ext/
-├── SmoreGSAPlotsExt.jl     # RecipesBase recipes; activated when RecipesBase loaded
-└── SmoreGSAMakieExt.jl     # Makie plots; activated when any Makie backend loaded
+└── SmoreGSAPlotsExt.jl     # RecipesBase recipes; activated when RecipesBase loaded
 test/
 └── runtests.jl
 ```
@@ -129,7 +128,7 @@ A feature is complete when **all** of the following are true:
 
 - Package entrypoint: `src/SmoreGSA.jl` — add `include(...)` and update `export` when adding new source files
 - Plots extension: `ext/SmoreGSAPlotsExt.jl` — activated by loading `RecipesBase` (or any Plots.jl backend)
-- Makie extension: `ext/SmoreGSAMakieExt.jl` — activated by loading any Makie backend
+- No Makie extension: Makie users build the bar chart directly from `SensitivityResult` (see `docs/src/plotting.md`). Do not reintroduce a Makie extension — see `progress.md` (Drop Makie extension) and SmoreBase's matching decision.
 - Run tests: `julia --project=. -e 'using Pkg; Pkg.test()'`
 
 ## Julia Environment Rules
@@ -137,4 +136,4 @@ A feature is complete when **all** of the following are true:
 - Always run Julia with `--project=.`
 - Preferred test command: `julia --project=. -e 'using Pkg; Pkg.test()'`
 - Do not edit `Manifest.toml` or add/bump dependencies without explicit approval.
-- `RecipesBase` and `Makie` are weak deps; users must load them explicitly to activate the respective extensions.
+- `RecipesBase` is a weak dep; users must load it explicitly to activate the Plots extension.

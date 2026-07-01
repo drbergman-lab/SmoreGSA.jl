@@ -71,15 +71,17 @@
 
 ---
 
-### Feature: Plotting (RecipesBase extension + Makie extension)
+### Feature: Plotting (RecipesBase extension)
 
-**One-line description:** Backend-agnostic sensitivity bar chart and Makie equivalent.
+**One-line description:** Sensitivity bar chart via the Plots/RecipesBase backend; Makie users build their own from `SensitivityResult`.
 
 **Priority:** Should-have
 
 **Behavioral specification:**
 
-`RecipesBase` and `Makie` are weak dependencies. The Plots extension (`SmoreGSAPlotsExt`) activates when `RecipesBase` is loaded; the Makie extension (`SmoreGSAMakieExt`) activates when any Makie backend is loaded.
+`RecipesBase` is a weak dependency. The Plots extension (`SmoreGSAPlotsExt`) activates when `RecipesBase` is loaded.
+
+There is **no Makie extension** — mirrors the SmoreBase decision (see SmoreBase `progress.md`, "Drop Makie extension"). A baked `Makie.plot(r) -> Figure` could not be customized (legend, layout) without reaching into `fig.content` and added no capability over building the chart directly. `SensitivityResult` exposes `sensitivity_S1`/`sensitivity_ST`, `cm_parameter_names`, and `output_labels`; `docs/src/plotting.md` shows the Makie recipe.
 
 | Type | Usage | What it shows |
 |------|-------|---------------|
@@ -88,15 +90,13 @@
 **Custom attributes:**
 - `show_ST::Bool = true` — whether to add ST bars alongside S1
 
-**Makie:** `Makie.plot(sens_result)` returns a `Makie.Figure`. ST bars use `alpha=0.45`.
-
 **Testing:**
 - `RecipesBase.apply_recipe(Dict{Symbol,Any}(), sens_result)` returns non-empty results
 
 **Acceptance criteria:**
 - `plot(sens_result)` produces a grouped bar chart with CM parameter names on x-axis.
-- `Makie.plot(sens_result)` returns a `Makie.Figure`.
 - Loading SmoreGSA without any plotting backend does not error.
+- `docs/src/plotting.md` documents the Plots recipe and states there is no Makie extension (`SensitivityResult` exposes public accessors for users who build their own).
 
 ---
 
