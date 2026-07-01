@@ -14,6 +14,7 @@ makedocs(;
     ),
     pages=[
         "Home" => "index.md",
+        "Plotting" => "plotting.md",
     ],
 )
 

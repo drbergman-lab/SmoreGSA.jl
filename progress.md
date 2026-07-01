@@ -95,3 +95,34 @@ Added a `problem`-first matrix shorthand (mirroring the existing `sm`-first matr
 
 ### Status
 Implementation in `src/sensitivity/sensitivity.jl`. Two new test sets added to `test/runtests.jl` (happy path + endpoint error). PRD and README updated.
+
+---
+
+## Session: Drop Makie extension (2026-06-24)
+
+### Goal
+Mirror the SmoreBase decision to **remove the Makie extension** rather than make it composable.
+
+### Decision
+`SmoreGSAMakieExt` shipped a single `Makie.plot(r::SensitivityResult) -> Figure` that built the
+`Figure`, `Axis`, and hardcoded `Legend(fig[1, 2], ax)` — uncustomizable without reaching into
+`fig.content`, and adding no capability over building the bar chart directly. Per SmoreBase's
+"Drop Makie extension" rationale (the only value was a convenience one-liner encoding where the
+data lives; Makie's rendering/layout are available regardless; the Plots recipe already encodes
+the same domain knowledge), the extension is removed and replaced with documentation.
+
+### Implementation
+- Deleted `ext/SmoreGSAMakieExt.jl`.
+- `Project.toml`: removed `Makie` from `[weakdeps]`, `[extensions]`, `[compat]`.
+- `docs/src/plotting.md` (new): documents the Plots recipe and states there is no Makie
+  extension (`SensitivityResult` exposes `sensitivity_S1`/`sensitivity_ST`/`cm_parameter_names`/
+  `output_labels` for users who roll their own). Registered in `docs/make.jl`. The hand-rolled
+  Makie bar-chart recipe was cut from here as clutter; it now lives in the SmoreExamples
+  notebook cells (`logistic_growth_pipeline.jl`), verified by a headless Pluto run.
+- Updated `README.md`, `PRD.md`, and `CLAUDE.md` to drop Makie-extension claims.
+
+### Decided / do-not-revisit
+- **Do not reintroduce a Makie extension.** Extend the build-your-own docs instead.
+
+### Status
+Implemented on `feature/drop-makie-ext`. Tests (never loaded Makie) pending run.

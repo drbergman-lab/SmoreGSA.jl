@@ -30,8 +30,8 @@ cm_prior = ParameterPrior(
 # Pass the SMFitProblem directly; times and conditions are derived from problem.data
 result = runSensitivity(problem, uq_results, cm_params, cm_prior, EFAST(n_samples=100))
 
-# Plot sensitivity indices
-using RecipesBase  # or: using CairoMakie
+# Plot sensitivity indices (Plots backend)
+using Plots
 plot(result)       # grouped bar chart: S1 and ST per CM parameter
 ```
 
@@ -49,7 +49,6 @@ plot(result)       # grouped bar chart: S1 and ST per CM parameter
 - [x] Nearest-neighbor interpolation of CI bounds from known cohorts
 - [x] ICDF transform inside the callable; unit bounds passed to `GlobalSensitivity.gsa`
 - [x] Plots extension (`SmoreGSAPlotsExt`) — `plot(sens_result)` grouped bar chart; activated by loading `RecipesBase`
-- [x] Makie extension (`SmoreGSAMakieExt`) — `Makie.plot(sens_result)` grouped bar chart; activated by loading any Makie backend
 
 ### Remaining
 
