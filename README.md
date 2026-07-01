@@ -18,7 +18,7 @@ using Distributions
 # After fitting SM and running UQ (see SmoreBase):
 #   problem    = SMFitProblem(sm, data, sm_prior)
 #   fit        = fitSurrogate(problem, P0)
-#   uq_results = [SmoreBase._uq(problem, fit, ProfileLikelihood(); param_set_index=i)
+#   uq_results = [quantifyUncertainty(problem, fit, ProfileLikelihood(); param_set_index=i)
 #                 for i in 1:n_cohorts]
 
 cm_prior = ParameterPrior(
