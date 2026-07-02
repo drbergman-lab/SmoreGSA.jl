@@ -21,21 +21,22 @@
 **Priority:** Must-have
 
 **Behavioral specification:**
-- `runSensitivity(sm, uqResults, cm_params, cm_prior, method; times, conditions, outputFn, n_sm_samples, rng) -> SensitivityResult`
+- `runSensitivity(method, sm, uqResults, cm_params, cm_prior; times, conditions, outputFn, n_sm_samples, rng) -> SensitivityResult`
+  - `method::GlobalSensitivity.GSAMethod` — `EFAST(n_samples=...)` or `Morris(num_trajectory=...)`; leads the argument list as the dispatch/extension point for future `GlobalSensitivity.GSAMethod` subtypes, matching SmoreBase's `quantifyUncertainty(method, problem, ...)` convention
   - `sm::AbstractSurrogateModel` — the fitted surrogate model (from SmoreBase)
   - `uqResults::Vector{ProfileLikelihoodResult}` — one UQ result per CM parameter set
   - `cm_params::AbstractMatrix` — CM parameter values at each CM param_set `[n_cm_param_sets × n_cm_params]`
   - `cm_prior::ParameterPrior` — CM parameter distributions/bounds for the GSA sweep; full distributions used via inverse-CDF transform
-  - `method::AbstractGSAMethod` — `EFAST(n_samples)` or `Morris(num_trajectory, ...)`
   - `times::AbstractVector` — time grid for SM evaluation (required keyword)
   - `conditions::ConditionSpec` — experimental conditions (default: `ConditionSpec()`)
   - `outputFn::Function` — maps SM prediction `[n_times × n_outputs]` → `Vector{Float64}`; default: last time point of each output variable
   - `n_sm_samples::Int` — LHS draws per CM parameter point to average over SM parameter uncertainty (default: 16)
   - `rng::AbstractRNG` — RNG for LHS sampling (default: `Random.default_rng()`)
-- `runSensitivity(problem, uqResults, cm_params, cm_prior, method; times, conditions, kwargs...) -> SensitivityResult`
+- `runSensitivity(method, problem, uqResults, cm_params, cm_prior; times, conditions, kwargs...) -> SensitivityResult`
   - Convenience overload accepting an `SMFitProblem` in place of `sm`. Derives `sm` from `problem.sm`; `times` defaults to `_times(problem.data)` and `conditions` defaults to `_conditions(problem.data)`.
   - `times` must be supplied explicitly when `problem.data` has no time axis (`_times` returns `nothing`); throws `ArgumentError` otherwise.
   - `problem.prior` (SM parameter prior) and `problem.loss` are not used — SM bounds come from `uqResults`; `cm_prior` remains a separate caller-supplied argument.
+  - **Breaking change:** argument order changes (`method` now leads); previously `runSensitivity(sm_or_problem, uqResults, cm_params, cm_prior, method; ...)`.
 - **Algorithm:** For each CM parameter vector `θ` that the GSA algorithm requires:
   1. Apply inverse-CDF to unit-cube input `u`: `θ_CM[i] = quantile(cm_prior.distributions[i], u[i])`
   2. Find nearest known CM param_set in `cm_params` (Euclidean distance)
@@ -45,24 +46,21 @@
 - `GlobalSensitivity.gsa` is called with `[[0, 1] for each CM param]` as bounds (ICDF is inside the callable).
 
 **Types:**
-- `abstract type AbstractGSAMethod end`
-- `EFAST(; n_samples=1000) <: AbstractGSAMethod` — wraps `GlobalSensitivity.eFAST`; computes S1 and ST
-- `Morris(; num_trajectory=10, p_steps=nothing, total_num_trajectory=nothing) <: AbstractGSAMethod` — computes µ* elementary effects; no ST
-- `SensitivityResult{T<:Real}`:
-  - `method::AbstractGSAMethod`
+- `EFAST(; n_samples, num_harmonics=4) <: GlobalSensitivity.GSAMethod` — package-defined wrapper around `GlobalSensitivity.eFAST`; `n_samples` is required (no default; `GlobalSensitivity.gsa` needs it for eFAST but it isn't a field of `GlobalSensitivity.eFAST` itself)
+- `Morris` — `GlobalSensitivity.Morris`, re-exported as-is (not wrapped); accepts `num_trajectory`, `p_steps`, `total_num_trajectory`, etc. per `GlobalSensitivity.jl`
+- `SensitivityResult{R}`:
+  - `method::GlobalSensitivity.GSAMethod` — the GSA method used
   - `cm_parameter_names::Vector{String}` — from `cm_prior.names`
   - `output_labels::Vector{String}`
-  - `S1::Matrix{T}` — first-order indices `[n_cm_params × n_outputs]`
-  - `ST::Union{Nothing, Matrix{T}}` — total-order indices; `nothing` for Morris
-  - `gsa_result::Any` — raw `GlobalSensitivity.jl` result
+  - `gsa_result::R` — raw `GlobalSensitivity.jl` result; indices are not stored as separate fields — access via `sensitivity_S1(result)` / `sensitivity_ST(result)`, both `[n_outputs × n_cm_params]` (`sensitivity_ST` is `nothing` for Morris)
 
 **Acceptance criteria:**
-- `runSensitivity(sm, uqResults, cm_params, cm_prior, EFAST(); times=t)` returns `SensitivityResult` with `size(S1) == (n_cm_params, n_outputs)` and `ST !== nothing`.
-- `runSensitivity(sm, uqResults, cm_params, cm_prior, Morris(); times=t)` returns `SensitivityResult` with `ST === nothing`.
-- `runSensitivity(problem, uqResults, cm_params, cm_prior, EFAST())` (no explicit `times`) returns the same result as the `sm`-first form when `problem.data` carries the same time grid.
+- `runSensitivity(EFAST(n_samples=100), sm, uqResults, cm_params, cm_prior; times=t)` returns `SensitivityResult` with `size(sensitivity_S1(result)) == (n_outputs, n_cm_params)` and `sensitivity_ST(result) !== nothing`.
+- `runSensitivity(Morris(num_trajectory=10), sm, uqResults, cm_params, cm_prior; times=t)` returns `SensitivityResult` with `sensitivity_ST(result) === nothing`.
+- `runSensitivity(EFAST(n_samples=100), problem, uqResults, cm_params, cm_prior)` (no explicit `times`) returns the same result as the `sm`-first form when `problem.data` carries the same time grid.
 - Calling the `problem`-first form when `problem.data` has no time axis throws `ArgumentError`.
 - When a profile CI bound is `nothing`, the implementation falls back to the fit bounds without error.
-- Custom `outputFn` returning a length-2 vector produces `size(S1) == (n_cm_params, 2)`.
+- Custom `outputFn` returning a length-2 vector produces `size(sensitivity_S1(result)) == (2, n_cm_params)`.
 
 **Future (not in v1):**
 - Richer CM parameter interpolation (linear, RBF) instead of nearest-neighbor.

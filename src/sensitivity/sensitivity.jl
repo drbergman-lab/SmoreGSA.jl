@@ -1,5 +1,5 @@
 """
-    runSensitivity(sm, uqResults, cm_sample, cm_prior, method; kwargs...) -> SensitivityResult
+    runSensitivity(method, sm, uqResults, cm_sample, cm_prior; kwargs...) -> SensitivityResult
 
 Global sensitivity analysis of CM output with respect to CM parameters, using the SM as a
 fast proxy for the CM.
@@ -13,11 +13,11 @@ For each CM parameter point the GSA algorithm requires, the SM is evaluated as f
 This construction mirrors MATLAB SmoreParS `sampleFromSMProfiles.m`.
 
 # Arguments
+- `method`    — `EFAST(n_samples=...)` or `GlobalSensitivity.Morris(...)`
 - `sm`        — the surrogate model (already fitted)
 - `uqResults` — profile likelihood UQ results, one `ProfileLikelihoodResult` per CM param_set
 - `cm_sample` — CM parameter points as an `AbstractCMSample` (e.g. `GridCMSample`)
 - `cm_prior`  — `ParameterPrior` for CM parameters; distributions used via inverse-CDF
-- `method`    — `EFAST(n_samples=...)` or `GlobalSensitivity.Morris(...)`
 
 # Keyword Arguments
 - `times`        — time grid for SM evaluation (required)
@@ -36,7 +36,7 @@ and `sensitivity_ST` for standardized index access.
 ```julia
 cm_sample = GridCMSample(cm_params)   # cm_params is [n_cm_param_sets × n_cm_params]
 result = runSensitivity(
-    sm, uq_results, cm_sample, cm_prior, EFAST(n_samples=2000);
+    EFAST(n_samples=2000), sm, uq_results, cm_sample, cm_prior;
     times = t,
 )
 S1 = sensitivity_S1(result)   # [n_outputs × n_cm_params]
@@ -44,27 +44,29 @@ ST = sensitivity_ST(result)   # [n_outputs × n_cm_params]
 ```
 """
 function runSensitivity(
+    method    :: GlobalSensitivity.GSAMethod,
     sm        :: AbstractSurrogateModel,
     uqResults :: Vector{<:ProfileLikelihoodResult},
     cm_params :: AbstractMatrix,
     args...;
     kwargs...,
 )
-    return runSensitivity(sm, uqResults, CMSample(cm_params), args...; kwargs...)
+    return runSensitivity(method, sm, uqResults, CMSample(cm_params), args...; kwargs...)
 end
 
 function runSensitivity(
+    method    :: GlobalSensitivity.GSAMethod,
     problem   :: SMFitProblem,
     uqResults :: Vector{<:ProfileLikelihoodResult},
     cm_params :: AbstractMatrix,
     args...;
     kwargs...,
 )
-    return runSensitivity(problem, uqResults, CMSample(cm_params), args...; kwargs...)
+    return runSensitivity(method, problem, uqResults, CMSample(cm_params), args...; kwargs...)
 end
 
 """
-    runSensitivity(problem, uqResults, cm_sample, cm_prior, method; kwargs...) -> SensitivityResult
+    runSensitivity(method, problem, uqResults, cm_sample, cm_prior; kwargs...) -> SensitivityResult
 
 Convenience overload that extracts `sm`, `times`, and `conditions` from `problem`, so the
 same object used for `fitSurrogate` and `quantifyUncertainty` can be passed directly to `runSensitivity`.
@@ -75,11 +77,11 @@ causes an `ArgumentError`). `problem.prior` (SM parameter prior) and `problem.lo
 used — SM bounds come from `uqResults`; `cm_prior` remains a separate argument.
 
 # Arguments
+- `method`    — `EFAST(n_samples=...)` or `GlobalSensitivity.Morris(...)`
 - `problem`   — `SMFitProblem` bundling the surrogate model and training data
 - `uqResults` — profile likelihood UQ results, one `ProfileLikelihoodResult` per CM param_set
 - `cm_sample` — CM parameter points as an `AbstractCMSample` (e.g. `GridCMSample`)
 - `cm_prior`  — `ParameterPrior` for CM parameters; distributions used via inverse-CDF
-- `method`    — `EFAST(n_samples=...)` or `GlobalSensitivity.Morris(...)`
 
 # Keyword Arguments
 Same as the primary `runSensitivity` method. `times` defaults to `_times(problem.data)`;
@@ -89,18 +91,18 @@ Same as the primary `runSensitivity` method. `times` defaults to `_times(problem
 ```julia
 problem = SMFitProblem(sm, data, sm_prior)
 result = runSensitivity(
-    problem, uq_results, cm_sample, cm_prior, EFAST(n_samples=2000),
+    EFAST(n_samples=2000), problem, uq_results, cm_sample, cm_prior,
 )
 S1 = sensitivity_S1(result)   # [n_outputs × n_cm_params]
 ST = sensitivity_ST(result)   # [n_outputs × n_cm_params]
 ```
 """
 function runSensitivity(
+    method       :: GlobalSensitivity.GSAMethod,
     problem      :: SMFitProblem,
     uqResults    :: Vector{<:ProfileLikelihoodResult},
     cm_sample    :: AbstractCMSample,
-    cm_prior     :: ParameterPrior,
-    method       :: GlobalSensitivity.GSAMethod;
+    cm_prior     :: ParameterPrior;
     times        :: Union{Nothing,AbstractVector} = SmoreBase._times(problem.data),
     conditions   :: ConditionSpec = SmoreBase._conditions(problem.data),
     kwargs...,
@@ -108,16 +110,16 @@ function runSensitivity(
     times === nothing && throw(ArgumentError(
         "problem.data has no time axis; pass `times` as a keyword argument"
     ))
-    return runSensitivity(problem.sm, uqResults, cm_sample, cm_prior, method;
+    return runSensitivity(method, problem.sm, uqResults, cm_sample, cm_prior;
                           times, conditions, kwargs...)
 end
 
 function runSensitivity(
+    method       :: GlobalSensitivity.GSAMethod,
     sm           :: AbstractSurrogateModel,
     uqResults    :: Vector{<:ProfileLikelihoodResult},
     cm_sample    :: AbstractCMSample,
-    cm_prior     :: ParameterPrior,
-    method       :: GlobalSensitivity.GSAMethod;
+    cm_prior     :: ParameterPrior;
     times        :: AbstractVector,
     conditions   :: ConditionSpec       = ConditionSpec(),
     outputFn     :: Function            = _defaultOutputFn,
