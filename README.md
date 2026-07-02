@@ -17,9 +17,8 @@ using Distributions
 
 # After fitting SM and running UQ (see SmoreBase):
 #   problem    = SMFitProblem(sm, data, sm_prior)
-#   fit        = fitSurrogate(problem, P0)
-#   uq_results = [quantifyUncertainty(problem, fit, ProfileLikelihood(); param_set_index=i)
-#                 for i in 1:n_cohorts]
+#   fit        = fitSurrogate(problem, P0)          # P0 has one row per CM param_set
+#   uq_results = quantifyUncertainty(ProfileLikelihood(), problem, fit)   # all CM param_sets
 
 cm_prior = ParameterPrior(
     lower = [0.0, 0.0],
@@ -46,7 +45,7 @@ plot(result)       # grouped bar chart: S1 and ST per CM parameter
 - [x] `runSensitivity` — EFAST and Morris sensitivity of CM outputs to CM parameters, using SM as fast CM proxy (via `GlobalSensitivity.jl`); accepts `SMFitProblem` directly (derives `sm`, `times`, `conditions` from it)
 - [x] `EFAST`, `Morris` — GSA method types
 - [x] `SensitivityResult` — result type with `S1`, `ST` (Morris: `ST === nothing`), `cm_parameter_names`, `output_labels`
-- [x] Nearest-neighbor interpolation of CI bounds from known cohorts
+- [x] Nearest-neighbor interpolation of CI bounds from known CM param_sets
 - [x] ICDF transform inside the callable; unit bounds passed to `GlobalSensitivity.gsa`
 - [x] Plots extension (`SmoreGSAPlotsExt`) — `plot(sens_result)` grouped bar chart; activated by loading `RecipesBase`
 

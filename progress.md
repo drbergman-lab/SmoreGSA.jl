@@ -126,3 +126,42 @@ the same domain knowledge), the extension is removed and replaced with documenta
 
 ### Status
 Implemented on `feature/drop-makie-ext`. Tests (never loaded Makie) pending run.
+
+---
+
+## Session: `_runSensitivity` method-first reorder (2026-07-02)
+
+### Goal
+Small consistency fix flagged during a cross-repo SmoreBase review session: `_runSensitivity(f,
+n_cm, method)` puts the dispatch key (`method::EFAST`/`::Morris`) last. SmoreBase just applied
+the same fix to `quantifyUncertainty` (`method` now leads, as the extension point for future
+`AbstractUQMethod` subtypes) — same rationale here for future `AbstractGSAMethod` subtypes.
+
+### Decision
+Reorder to `_runSensitivity(method, f, n_cm)` in `efast.jl` and `morris.jl`, and update the one
+call site in `sensitivity.jl`. Purely internal (`_runSensitivity` is not exported); the public
+`runSensitivity(sm, uqResults, cm_sample, cm_prior, method; ...)` signature is unchanged — no
+user-facing or PRD behavioral change.
+
+### Status
+Implemented on `feature/runsensitivity-method-first`. Existing test suite (EFAST + Morris via
+`runSensitivity`) passes unchanged.
+
+---
+
+## Session: `cohort` → `cm_param_set` prose cleanup (2026-07-02)
+
+### Goal
+SmoreBase renamed `param_set` → `cm_param_set` throughout its own API (see its progress.md);
+SmoreGSA doesn't call any of the renamed functions directly (it takes `uqResults` and
+`cm_sample` as opaque inputs), so no code changes were needed here. But its own docs/comments
+said "cohort" for the same concept — updated to match for ecosystem-wide consistency.
+
+### Decision
+Replaced "cohort"/"cohort point" prose with "CM param_set" in `sensitivity.jl`, `sampling.jl`,
+PRD.md, README.md, and one test comment. `n_cohorts` local variable in `sampling.jl` renamed to
+`n_cm_param_sets`.
+
+### Status
+Implemented on `feature/runsensitivity-method-first` (same branch as the reorder above). Full
+test suite green (29 tests).

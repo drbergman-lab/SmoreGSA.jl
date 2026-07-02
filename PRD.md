@@ -23,8 +23,8 @@
 **Behavioral specification:**
 - `runSensitivity(sm, uqResults, cm_params, cm_prior, method; times, conditions, outputFn, n_sm_samples, rng) -> SensitivityResult`
   - `sm::AbstractSurrogateModel` — the fitted surrogate model (from SmoreBase)
-  - `uqResults::Vector{ProfileLikelihoodResult}` — one UQ result per CM parameter set (cohort)
-  - `cm_params::AbstractMatrix` — CM parameter values at each cohort `[n_cohorts × n_cm_params]`
+  - `uqResults::Vector{ProfileLikelihoodResult}` — one UQ result per CM parameter set
+  - `cm_params::AbstractMatrix` — CM parameter values at each CM param_set `[n_cm_param_sets × n_cm_params]`
   - `cm_prior::ParameterPrior` — CM parameter distributions/bounds for the GSA sweep; full distributions used via inverse-CDF transform
   - `method::AbstractGSAMethod` — `EFAST(n_samples)` or `Morris(num_trajectory, ...)`
   - `times::AbstractVector` — time grid for SM evaluation (required keyword)
@@ -38,8 +38,8 @@
   - `problem.prior` (SM parameter prior) and `problem.loss` are not used — SM bounds come from `uqResults`; `cm_prior` remains a separate caller-supplied argument.
 - **Algorithm:** For each CM parameter vector `θ` that the GSA algorithm requires:
   1. Apply inverse-CDF to unit-cube input `u`: `θ_CM[i] = quantile(cm_prior.distributions[i], u[i])`
-  2. Find nearest known cohort in `cm_params` (Euclidean distance)
-  3. Use that cohort's profile likelihood CI bounds as the SM parameter box; fall back to fit bounds when CI is `nothing`
+  2. Find nearest known CM param_set in `cm_params` (Euclidean distance)
+  3. Use that CM param_set's profile likelihood CI bounds as the SM parameter box; fall back to fit bounds when CI is `nothing`
   4. LHS-sample `n_sm_samples` points within the SM parameter box
   5. Evaluate SM at each LHS draw; return mean `outputFn` result
 - `GlobalSensitivity.gsa` is called with `[[0, 1] for each CM param]` as bounds (ICDF is inside the callable).

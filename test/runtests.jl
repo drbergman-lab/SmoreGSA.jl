@@ -11,7 +11,7 @@ using Random
 _sm_fn(t, p, _cond) = reshape(p[1] .* exp.(-p[2] .* t), :, 1)
 const _sm = AnalyticalSurrogateModel(fn = _sm_fn)
 
-# Build a minimal ProfileLikelihoodResult for a given cohort.
+# Build a minimal ProfileLikelihoodResult for a given CM param_set.
 function _make_uq(a_true, b_true; ci_frac=0.2, lb=[0.0, 0.0], ub=[5.0, 5.0])
     prior  = ParameterPrior(lb, ub; names=["a", "b"])
     params = [a_true b_true]
