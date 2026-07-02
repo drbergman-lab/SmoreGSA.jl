@@ -34,7 +34,7 @@ const _cm_prior = ParameterPrior([1.0], [5.0]; names=["cm_param_1"])
 @testset "EFAST" begin
     rng    = Random.MersenneTwister(42)
     result = runSensitivity(
-        _sm, _uq_list, _cm_sample, _cm_prior, EFAST(n_samples=500);
+        EFAST(n_samples=500), _sm, _uq_list, _cm_sample, _cm_prior;
         times = _t,
         rng   = rng,
     )
@@ -59,7 +59,7 @@ end
 @testset "Morris" begin
     rng    = Random.MersenneTwister(7)
     result = runSensitivity(
-        _sm, _uq_list, _cm_sample, _cm_prior, Morris(num_trajectory=5);
+        Morris(num_trajectory=5), _sm, _uq_list, _cm_sample, _cm_prior;
         times = _t,
         rng   = rng,
     )
@@ -80,7 +80,7 @@ end
 
     rng    = Random.MersenneTwister(99)
     result = runSensitivity(
-        _sm, _uq_list, _cm_sample, _cm_prior, EFAST(n_samples=500);
+        EFAST(n_samples=500), _sm, _uq_list, _cm_sample, _cm_prior;
         times    = _t,
         outputFn = two_out_fn,
         rng      = rng,
@@ -111,7 +111,7 @@ end
 
     rng    = Random.MersenneTwister(11)
     result = runSensitivity(
-        _sm, uq_partial, _cm_sample, _cm_prior, Morris(num_trajectory=5);
+        Morris(num_trajectory=5), _sm, uq_partial, _cm_sample, _cm_prior;
         times = _t,
         rng   = rng,
     )
@@ -125,7 +125,7 @@ end
 @testset "nearest-neighbor exact match" begin
     rng    = Random.MersenneTwister(0)
     result = runSensitivity(
-        _sm, _uq_list, _cm_sample, _cm_prior, Morris(num_trajectory=3);
+        Morris(num_trajectory=3), _sm, _uq_list, _cm_sample, _cm_prior;
         times        = _t,
         n_sm_samples = 4,
         rng          = rng,
@@ -143,7 +143,7 @@ end
 
     rng    = Random.MersenneTwister(42)
     result = runSensitivity(
-        problem, _uq_list, _cm_sample, _cm_prior, EFAST(n_samples=500);
+        EFAST(n_samples=500), problem, _uq_list, _cm_sample, _cm_prior;
         rng = rng,
     )
 
@@ -159,7 +159,7 @@ end
     problem  = SMFitProblem(_sm, data, sm_prior)
 
     @test_throws ArgumentError runSensitivity(
-        problem, _uq_list, _cm_sample, _cm_prior, Morris(num_trajectory=3),
+        Morris(num_trajectory=3), problem, _uq_list, _cm_sample, _cm_prior,
     )
 end
 
@@ -168,7 +168,7 @@ end
 @testset "Plots — SensitivityResult (EFAST)" begin
     rng    = Random.MersenneTwister(42)
     result = runSensitivity(
-        _sm, _uq_list, _cm_sample, _cm_prior, EFAST(n_samples=500);
+        EFAST(n_samples=500), _sm, _uq_list, _cm_sample, _cm_prior;
         times = _t,
         rng   = rng,
     )
@@ -185,7 +185,7 @@ end
 @testset "Plots — SensitivityResult (Morris)" begin
     rng    = Random.MersenneTwister(7)
     result = runSensitivity(
-        _sm, _uq_list, _cm_sample, _cm_prior, Morris(num_trajectory=5);
+        Morris(num_trajectory=5), _sm, _uq_list, _cm_sample, _cm_prior;
         times = _t,
         rng   = rng,
     )
@@ -199,7 +199,7 @@ end
     two_out_fn = pred -> [pred[1, 1], pred[end, 1]]
     rng        = Random.MersenneTwister(99)
     result = runSensitivity(
-        _sm, _uq_list, _cm_sample, _cm_prior, EFAST(n_samples=500);
+        EFAST(n_samples=500), _sm, _uq_list, _cm_sample, _cm_prior;
         times    = _t,
         outputFn = two_out_fn,
         rng      = rng,

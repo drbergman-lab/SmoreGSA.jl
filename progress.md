@@ -165,3 +165,34 @@ PRD.md, README.md, and one test comment. `n_cohorts` local variable in `sampling
 ### Status
 Implemented on `feature/runsensitivity-method-first` (same branch as the reorder above). Full
 test suite green (29 tests).
+
+---
+
+## Session: `runSensitivity` public API — method-first reorder (2026-07-02)
+
+### Goal
+The "`_runSensitivity` method-first reorder" session above deliberately left the public
+`runSensitivity(sm, uqResults, cm_sample, cm_prior, method; ...)` signature unchanged, reasoning
+it was purely an internal-helper consistency fix. Revisited: that was inconsistent on its own
+terms — the stated rationale for `method`-first (it's the dispatch/extension point for future
+method subtypes) applies at least as much to the public entry point as to the internal helper,
+and it now diverges from SmoreBase's public `quantifyUncertainty(method, problem, fitResult,
+...)`, which *does* lead with `method`.
+
+### Decision
+Reorder all four `runSensitivity` methods in `sensitivity.jl` to `runSensitivity(method,
+sm_or_problem, uqResults, cm_params_or_sample, cm_prior; kwargs...)`. The two
+`AbstractMatrix`-forwarding convenience overloads keep their `args...` tail, which now absorbs
+only `cm_prior` (previously `cm_prior, method` together) — mechanically unaffected since it's
+positional forwarding, not explicit destructuring.
+
+### Breaking change (deliberate — pre-1.0)
+Every caller must move `method` from last to first. Updated: `sensitivity.jl` (implementation +
+both docstrings), `README.md`, `PRD.md`, and all 10 call sites in `test/runtests.jl`.
+
+### Cross-repo follow-ups (tracked, not part of this branch)
+- **SmoreExamples**: `examples/logistic_growth_pipeline.jl` has 3 `runSensitivity` call sites
+  (EFAST, Morris, custom `outputFn`) using the old argument order.
+
+### Status
+Implemented on `feature/runsensitivity-public-method-first`. Full test suite green.

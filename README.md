@@ -27,7 +27,7 @@ cm_prior = ParameterPrior(
 )
 
 # Pass the SMFitProblem directly; times and conditions are derived from problem.data
-result = runSensitivity(problem, uq_results, cm_params, cm_prior, EFAST(n_samples=100))
+result = runSensitivity(EFAST(n_samples=100), problem, uq_results, cm_params, cm_prior)
 
 # Plot sensitivity indices (Plots backend)
 using Plots
