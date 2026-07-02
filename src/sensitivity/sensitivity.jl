@@ -14,7 +14,7 @@ This construction mirrors MATLAB SmoreParS `sampleFromSMProfiles.m`.
 
 # Arguments
 - `sm`        — the surrogate model (already fitted)
-- `uqResults` — profile likelihood UQ results, one `ProfileLikelihoodResult` per cohort
+- `uqResults` — profile likelihood UQ results, one `ProfileLikelihoodResult` per CM param_set
 - `cm_sample` — CM parameter points as an `AbstractCMSample` (e.g. `GridCMSample`)
 - `cm_prior`  — `ParameterPrior` for CM parameters; distributions used via inverse-CDF
 - `method`    — `EFAST(n_samples=...)` or `GlobalSensitivity.Morris(...)`
@@ -34,7 +34,7 @@ and `sensitivity_ST` for standardized index access.
 
 # Example
 ```julia
-cm_sample = GridCMSample(cm_params)   # cm_params is [n_cohorts × n_cm_params]
+cm_sample = GridCMSample(cm_params)   # cm_params is [n_cm_param_sets × n_cm_params]
 result = runSensitivity(
     sm, uq_results, cm_sample, cm_prior, EFAST(n_samples=2000);
     times = t,
@@ -76,7 +76,7 @@ used — SM bounds come from `uqResults`; `cm_prior` remains a separate argument
 
 # Arguments
 - `problem`   — `SMFitProblem` bundling the surrogate model and training data
-- `uqResults` — profile likelihood UQ results, one `ProfileLikelihoodResult` per cohort
+- `uqResults` — profile likelihood UQ results, one `ProfileLikelihoodResult` per CM param_set
 - `cm_sample` — CM parameter points as an `AbstractCMSample` (e.g. `GridCMSample`)
 - `cm_prior`  — `ParameterPrior` for CM parameters; distributions used via inverse-CDF
 - `method`    — `EFAST(n_samples=...)` or `GlobalSensitivity.Morris(...)`
@@ -127,7 +127,7 @@ function runSensitivity(
 )
     n_cm       = length(cm_prior.distributions)
     f          = _buildCMCallable(sm, uqResults, cm_sample, cm_prior, conditions, times, outputFn, n_sm_samples, rng, interpolator)
-    gsa_result = _runSensitivity(f, n_cm, method)
+    gsa_result = _runSensitivity(method, f, n_cm)
     n_out      = _n_outputs(gsa_result)
     return SensitivityResult(method, cm_prior.names, ["output_$i" for i in 1:n_out], gsa_result)
 end

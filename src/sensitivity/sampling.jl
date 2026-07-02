@@ -40,13 +40,13 @@ function _buildCMCallable(
     rng          :: AbstractRNG,
     interp       :: AbstractCIInterpolator,
 )
-    n_cohorts   = length(uqResults)
+    n_cm_param_sets   = length(uqResults)
     n_sm_params = length(uqResults[1].profiles)
     cond_label  = conditions[1]   # v1: first condition only
 
-    # Pre-extract CI bounds for every cohort; fall back to fit bounds when CI is nothing.
-    lb_table = Matrix{Float64}(undef, n_cohorts, n_sm_params)
-    ub_table = Matrix{Float64}(undef, n_cohorts, n_sm_params)
+    # Pre-extract CI bounds for every CM param_set; fall back to fit bounds when CI is nothing.
+    lb_table = Matrix{Float64}(undef, n_cm_param_sets, n_sm_params)
+    ub_table = Matrix{Float64}(undef, n_cm_param_sets, n_sm_params)
     for (k, uq) in enumerate(uqResults)
         prior_lb = [minimum(d) for d in uq.fit_result.prior.distributions]
         prior_ub = [maximum(d) for d in uq.fit_result.prior.distributions]
@@ -73,7 +73,7 @@ function _buildCMCallable(
         # via SmoreBase's public box sampler (a flat profile through the shared sampler internally).
         # A richer approximation would interpolate the full profile LL curve at each CM point
         # and sample from the resulting weighted distribution (as sampleSMPredictions does for
-        # a single cohort). That requires interpolating entire curves across the CM grid rather
+        # a single CM param_set). That requires interpolating entire curves across the CM grid rather
         # than just the two CI scalars, and is an open research direction.
         sm_samples = sampleSMParametersInBounds(lb, ub; nSamples = n_sm_samples, rng = rng)
 
