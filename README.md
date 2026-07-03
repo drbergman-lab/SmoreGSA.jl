@@ -47,7 +47,7 @@ plot(result)       # grouped bar chart: S1 and ST per CM parameter
 - [x] `SensitivityResult` — result type with `S1`, `ST` (Morris: `ST === nothing`), `cm_parameter_names`, `output_labels`
 - [x] Nearest-neighbor interpolation of CI bounds from known CM param_sets
 - [x] ICDF transform inside the callable; unit bounds passed to `GlobalSensitivity.gsa`
-- [x] Plots extension (`SmoreGSAPlotsExt`) — `plot(sens_result)` grouped bar chart; activated by loading `RecipesBase`
+- [x] Plots extension (`SmoreGSAPlotsExt`) — `plot(sens_result)` grouped, stacked bar chart (`groupby = :output` default or `:parameter`; S1 stacked with ST−S1 when available); activated by loading `RecipesBase`
 
 ### Remaining
 

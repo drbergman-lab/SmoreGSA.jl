@@ -196,3 +196,45 @@ both docstrings), `README.md`, `PRD.md`, and all 10 call sites in `test/runtests
 
 ### Status
 Implemented on `feature/runsensitivity-public-method-first`. Full test suite green.
+
+---
+
+## Session: Grouped + stacked bar chart for `plot(::SensitivityResult)` (2026-07-02)
+
+### Goal
+`plot(result)` was drawing one `@series` per output for S1 and one for ST, with no
+`bar_position` set, so Plots overlaid/stacked bars across *all* outputs at the same x
+(CM parameter) instead of grouping them — flagged while writing `cm_posterior_pipeline.jl`
+in SmoreExamples. Requested redesign: cluster by output or by CM parameter (output default),
+with bars dodged within each cluster and, per bar, S1 stacked with ST−S1 on top.
+
+### Decision
+Added `groupby::Symbol = :output` plot attribute (`:output` or `:parameter`) selecting the
+cluster axis; the other axis becomes the dodge groups within each cluster. Bar x-positions are
+computed manually (`cluster_index + offset(subgroup)`), since achieving grouping this way
+sidesteps a real Plots.jl limitation found while implementing this: `bar_position` is declared
+in the attribute table (default `:overlay`, docs literally say "may only be partially
+implemented") but is never read anywhere in the GR-backend drawing code — setting
+`bar_position := :stack` did nothing and just triggered "attribute not supported" warnings.
+Stacking is instead done via the `:bar` recipe's actual bottom-of-bar mechanism: `fillrange`
+(default `0`) sets where the bar starts, so the ST segment is a second series with
+`y = ST` and `fillrange := S1` — drawing a rectangle from S1 up to ST, i.e. the S1-labeled
+segment plus a lighter ST−S1 segment on top, without needing `bar_position` at all.
+
+Also renamed the plot attribute from the originally-planned `group` to `groupby`: `group` is a
+reserved Plots/RecipesPipeline keyword (its own automatic series-splitting mechanism) and
+collided with `SensitivityResult`'s dispatch before the recipe body ever ran.
+
+Verified visually, not just structurally: rendered actual GR PNGs for both `groupby` modes,
+`show_ST=false`, and a no-ST (Morris) result, and inspected them — `apply_recipe` series-count
+assertions alone would not have caught either the `bar_position` no-op or the `group` keyword
+collision, both of which produced *valid* `RecipeData` that only looked wrong once rendered.
+
+### Breaking change (deliberate — pre-1.0)
+Series count per `plot(result)` call changed: previously 2 series per output (S1, ST);
+now 1 subgroup's worth of series per bar-cluster-spanning series (2 if ST available, 1 if not),
+regardless of cluster count. Updated `test/runtests.jl`'s `apply_recipe` assertions accordingly
+and added coverage for both `groupby` modes.
+
+### Status
+Implemented on `feature/grouped-stacked-sensitivity-bars`. Full test suite green.

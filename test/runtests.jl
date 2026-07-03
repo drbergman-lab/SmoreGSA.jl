@@ -205,7 +205,19 @@ end
         rng      = rng,
     )
 
-    # 2 outputs × (S1 + ST) = 4 series
+    # groupby=:output (default): 1 CM parameter (1 subgroup) × (S1 + ST) = 2 series,
+    # each series spanning both output clusters along x.
     rds = RecipesBase.apply_recipe(Dict{Symbol,Any}(), result)
-    @test length(rds) == 4
+    @test length(rds) == 2
+    @test rds[1].plotattributes[:label] == "S1"   # 1 CM param → generic "S1" label
+
+    # groupby=:parameter: 2 outputs (2 subgroups) × (S1 + ST) = 4 series, each
+    # subgroup's pair spanning the single CM-parameter cluster.
+    rds_p = RecipesBase.apply_recipe(Dict{Symbol,Any}(:groupby => :parameter), result)
+    @test length(rds_p) == 4
+    @test rds_p[1].plotattributes[:label] == "output_1"
+    @test rds_p[3].plotattributes[:label] == "output_2"
+
+    # Invalid groupby throws cleanly.
+    @test_throws ArgumentError RecipesBase.apply_recipe(Dict{Symbol,Any}(:groupby => :nope), result)
 end
