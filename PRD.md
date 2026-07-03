@@ -83,16 +83,21 @@ There is **no Makie extension** — mirrors the SmoreBase decision (see SmoreBas
 
 | Type | Usage | What it shows |
 |------|-------|---------------|
-| `SensitivityResult` | `plot(sens_result)` | Grouped bar chart: x = CM parameter names, bars = S1 (and ST if available and `show_ST=true`) per output |
+| `SensitivityResult` | `plot(sens_result)` | Grouped, stacked bar chart: one cluster per `groupby` category (`:output` default, or `:parameter`), one dodged bar per remaining category within each cluster; each bar is S1 (bottom, solid) with ST−S1 (top, `fillalpha=0.45`) stacked on it when ST is available |
 
 **Custom attributes:**
-- `show_ST::Bool = true` — whether to add ST bars alongside S1
+- `groupby::Symbol = :output` — `:output` clusters by output variable (bars within a cluster = CM parameters); `:parameter` clusters by CM parameter (bars within a cluster = outputs)
+- `show_ST::Bool = true` — whether to stack the ST−S1 segment on top of S1 when ST is available
+
+**Implementation note:** Plots.jl's `bar_position` attribute is not actually wired up for the GR backend in the installed version (present in the attribute table, absent from any drawing code) — grouping and stacking are done manually: bar x-positions are offset per subgroup within each cluster (dodge), and the ST segment is drawn as a second `:bar` series with `fillrange := s1_vals` (the bar recipe's "bottom" attribute, default 0), producing the stacked look without relying on `bar_position`.
 
 **Testing:**
-- `RecipesBase.apply_recipe(Dict{Symbol,Any}(), sens_result)` returns non-empty results
+- `RecipesBase.apply_recipe(Dict{Symbol,Any}(), sens_result)` returns non-empty results; series counts and labels checked for both `groupby` modes
+- Verified visually via GR-rendered PNGs (grouping and stacking both confirmed by inspection, not just series counts)
 
 **Acceptance criteria:**
-- `plot(sens_result)` produces a grouped bar chart with CM parameter names on x-axis.
+- `plot(sens_result)` produces a grouped bar chart clustered by output (default), with CM-parameter bars dodged (not overlapping/overlaid) within each cluster.
+- `plot(sens_result; groupby = :parameter)` clusters by CM parameter instead, with output bars dodged within each cluster.
 - Loading SmoreGSA without any plotting backend does not error.
 - `docs/src/plotting.md` documents the Plots recipe and states there is no Makie extension (`SensitivityResult` exposes public accessors for users who build their own).
 
