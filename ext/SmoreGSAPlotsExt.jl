@@ -35,6 +35,8 @@ plot(sens_result; show_ST = false)     # S1 only, no stacking
     ST = sensitivity_ST(r)
     has_ST = ST !== nothing
 
+    # `groupby`, not `group`: `group` is a reserved Plots/RecipesPipeline keyword (automatic
+    # series splitting) and broke dispatch on `SensitivityResult` before this recipe ran.
     groupby = pop!(plotattributes, :groupby, :output)
     show_ST = pop!(plotattributes, :show_ST, true) && has_ST
 

@@ -38,7 +38,7 @@ plot(result)       # grouped bar chart: S1 and ST per CM parameter
 
 ## Implementation Status
 
-> For Claude Code sessions: this section is the authoritative record of what has been built. Update it as features are completed. See [PRD.md](PRD.md) for behavioral specifications and [progress.md](progress.md) for decision rationale.
+> For Claude Code sessions: this section is the authoritative record of what has been built. Update it as features are completed. See [PRD.md](PRD.md) for behavioral specifications.
 
 ### Completed
 
