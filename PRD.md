@@ -79,7 +79,7 @@
 
 `RecipesBase` is a weak dependency. The Plots extension (`SmoreGSAPlotsExt`) activates when `RecipesBase` is loaded.
 
-There is **no Makie extension** — mirrors the SmoreBase decision (see SmoreBase `progress.md`, "Drop Makie extension"). A baked `Makie.plot(r) -> Figure` could not be customized (legend, layout) without reaching into `fig.content` and added no capability over building the chart directly. `SensitivityResult` exposes `sensitivity_S1`/`sensitivity_ST`, `cm_parameter_names`, and `output_labels`; `docs/src/plotting.md` shows the Makie recipe.
+There is **no Makie extension** — mirrors the SmoreBase decision (see SmoreBase `PRD.md`). A baked `Makie.plot(r) -> Figure` could not be customized (legend, layout) without reaching into `fig.content` and added no capability over building the chart directly. `SensitivityResult` exposes `sensitivity_S1`/`sensitivity_ST`, `cm_parameter_names`, and `output_labels`; `docs/src/plotting.md` shows the Makie recipe.
 
 | Type | Usage | What it shows |
 |------|-------|---------------|
