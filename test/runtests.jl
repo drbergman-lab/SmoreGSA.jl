@@ -20,7 +20,7 @@ function _make_uq(a_true, b_true; ci_frac=0.2, lb=[0.0, 0.0], ub=[5.0, 5.0])
                           a_true * (1 - ci_frac), a_true * (1 + ci_frac), -1.92, 0.0)
     pc_b   = ProfileCurve(2, "b", collect(range(lb[2], ub[2], 20)), zeros(20), zeros(20, 2),
                           b_true * (1 - ci_frac), b_true * (1 + ci_frac), -1.92, 0.0)
-    return ProfileLikelihoodResult([pc_a, pc_b], fit, collect(range(0.0, 5.0, 10)))
+    return ProfileLikelihoodResult([pc_a, pc_b], fit, collect(range(0.0, 5.0, 10)), ProfileLikelihood(n_points = 20))
 end
 
 const _t        = collect(range(0.0, 5.0, 10))
@@ -104,7 +104,7 @@ end
                               a_true * 0.8, a_true * 1.2, -1.92, 0.0)
         pc_b   = ProfileCurve(2, "b", collect(range(0.0, 5.0, 20)), zeros(20), zeros(20, 2),
                               nothing, nothing, -1.92, 0.0)
-        return ProfileLikelihoodResult([pc_a, pc_b], fit, _t)
+        return ProfileLikelihoodResult([pc_a, pc_b], fit, _t, ProfileLikelihood(n_points = 20))
     end
 
     uq_partial = [_make_uq_partial_ci(Float64(k), 0.5) for k in 1:5]
